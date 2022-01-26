@@ -1,8 +1,8 @@
 import Web3 from 'web3'
 import { AbiItem } from 'web3-utils'
-import TokenContract from '../build/contracts/Token.json'
+import TokenContract from '../build-contract/contracts/Token.json'
 import { Token } from '../types/web3-v1-contracts/Token'
-import BankContract from '../build/contracts/Bank.json'
+import BankContract from '../build-contract/contracts/Bank.json'
 import { Bank } from '../types/web3-v1-contracts/Bank'
 import { toWei } from './common'
 
