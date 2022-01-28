@@ -6,32 +6,66 @@ import BankContract from '../build-contract/contracts/Bank.json'
 import { Bank } from '../types/web3-v1-contracts/Bank'
 import { toWei } from './common'
 
-let selectedAccount: string
+export let selectedAccount: string
 let tokenContract: Token
 let bankContract: Bank
 let isInitialized: boolean = false
 const tokenAddr = process.env.NEXT_PUBLIC_TOKEN_ADDR
 const bankAddr = process.env.NEXT_PUBLIC_BANK_ADDR
 
-export const init = async () => {
+export const login = async () => {
     let provider = (window as any).ethereum
 
     if (typeof provider !== 'undefined') {
         provider
             .request({ method: 'eth_requestAccounts' })
-            .then(accounts => {
-                selectedAccount = accounts[0]
-                console.log(`selectedAccount is ${selectedAccount}`)
+            .then(async accounts => {
+                if (accounts && accounts.length > 0) {
+                    selectedAccount = accounts[0]
+                    await window.localStorage.setItem('selectedAccount', selectedAccount)
+                    console.log(`selectedAccount is ${selectedAccount}`)
+                } else {
+                    await window.localStorage.removeItem('selectedAccount')
+                }
+                window.location.reload()
             })
             .catch(err => {
                 console.log(err)
                 return
             })
+    }
+}
 
-        provider.on('accountsChanged', accounts => {
-            selectedAccount = accounts[0]
-            console.log(`selectedAccount is ${selectedAccount}`)
+export const logout = () => {
+    let provider = (window as any).ethereum
+
+    if (typeof provider !== 'undefined') {
+        provider.on('disconnect', () => { })
+    }
+}
+
+export const init = async () => {
+    let provider = (window as any).ethereum
+
+    if (typeof provider !== 'undefined') {
+
+        const userAcc = await window.localStorage.getItem('selectedAccount')
+        if (userAcc && userAcc != '') {
+            selectedAccount = userAcc
+        }
+
+        provider.on('accountsChanged', async accounts => {
+            if (accounts && accounts.length > 0) {
+                selectedAccount = accounts[0]
+                await window.localStorage.setItem('selectedAccount', selectedAccount)
+                console.log(`switch to selectedAccount is ${selectedAccount}`)
+            } else {
+                console.log('remove account from storage')
+                await window.localStorage.removeItem('selectedAccount')
+                window.location.reload()
+            }
         })
+
     }
 
     const web3 = await new Web3(provider)
@@ -73,4 +107,10 @@ export const checkUserToken = async (): Promise<string> => {
     if (!isInitialized) await init()
 
     return tokenContract.methods.balanceOf(selectedAccount).call()
+}
+
+export const getUserBalanceInBank = async () => {
+    if (!isInitialized) await init()
+
+    return bankContract.methods.checkUserBalance().call({ from: selectedAccount })
 }

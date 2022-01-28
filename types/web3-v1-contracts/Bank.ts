@@ -144,6 +144,8 @@ export interface Bank extends BaseContract {
     deposit(amount: number | string | BN): NonPayableTransactionObject<void>;
 
     withdraw(amount: number | string | BN): NonPayableTransactionObject<void>;
+
+    checkUserBalance(): NonPayableTransactionObject<string>;
   };
   events: {
     Approval(cb?: Callback<Approval>): EventEmitter;
