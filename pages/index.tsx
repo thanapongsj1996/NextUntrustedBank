@@ -20,7 +20,6 @@ const Home: NextPage = () => {
   const [balanceInBank, setBalanceInBank] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [isLogin, setIsLogin] = useState(false)
-  const [account, setAccount] = useState('')
   const [inputAmount, setInputAmount] = useState(0)
   const [transferAddr, setTransferAddr] = useState('')
   const [transferAmount, setTransferAmount] = useState(0)
@@ -43,10 +42,8 @@ const Home: NextPage = () => {
     const status = await window.localStorage.getItem('selectedAccount')
     if (!status || status == '') {
       setIsLogin(false)
-      setAccount('')
     } else {
       setIsLogin(true)
-      setAccount(status)
     }
     return status && status != ''
   }
