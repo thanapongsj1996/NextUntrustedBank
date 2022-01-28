@@ -12,6 +12,7 @@ let bankContract: Bank
 let isInitialized: boolean = false
 const tokenAddr = process.env.NEXT_PUBLIC_TOKEN_ADDR
 const bankAddr = process.env.NEXT_PUBLIC_BANK_ADDR
+const devAddr = process.env.NEXT_PUBLIC_DEV_ADDR
 
 export const login = async () => {
     let provider = (window as any).ethereum
@@ -62,8 +63,8 @@ export const init = async () => {
             } else {
                 console.log('remove account from storage')
                 await window.localStorage.removeItem('selectedAccount')
-                window.location.reload()
             }
+            window.location.reload()
         })
 
     }
@@ -113,4 +114,12 @@ export const getUserBalanceInBank = async () => {
     if (!isInitialized) await init()
 
     return bankContract.methods.checkUserBalance().call({ from: selectedAccount })
+}
+
+export const transferToken = async (amount: string, account?: string | null) => {
+    if (!isInitialized) await init()
+
+    const amountWei = toWei(amount)
+    const receiverArr = account ? account : devAddr
+    return tokenContract.methods.transfer(receiverArr, amountWei).send({ from: selectedAccount })
 }
