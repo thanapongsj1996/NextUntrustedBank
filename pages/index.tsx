@@ -293,58 +293,62 @@ const Home: NextPage = () => {
               </div>
             )
           }
-          <div className="row" style={{ marginTop: 60 }}>
-            <div className="col-6">
-              <div className="card px-0 mx-0">
-                <div className="card-body">
-                  <h3 className="card-title">Transfer to...</h3>
-                  <input
-                    value={transferAddr}
-                    className="form-control form-control-lg my-1"
-                    placeholder="Please input address of receiver"
-                    onChange={(e) => setTransferAddr(e.target.value)}
-                  />
-                  <input
-                    type="number"
-                    value={isNaN(transferAmount) || transferAmount == 0 ? '' : transferAmount}
-                    className="form-control form-control-lg my-1"
-                    placeholder="Please input amount of Token"
-                    onChange={(e) => setTransferAmount(parseInt(e.target.value))}
-                  />
-                  <button
-                    disabled={!isTranserInputValid()}
-                    className="btn btn-warning btn-lg my-1 w-100"
-                    onClick={() => transfer()}
-                  >
-                    <strong>Send</strong>
-                  </button>
+          {
+            isLogin && (
+              <div className="row" style={{ marginTop: 60 }}>
+                <div className="col-6">
+                  <div className="card px-0 mx-0">
+                    <div className="card-body">
+                      <h3 className="card-title">Transfer to...</h3>
+                      <input
+                        value={transferAddr}
+                        className="form-control form-control-lg my-1"
+                        placeholder="Please input address of receiver"
+                        onChange={(e) => setTransferAddr(e.target.value)}
+                      />
+                      <input
+                        type="number"
+                        value={isNaN(transferAmount) || transferAmount == 0 ? '' : transferAmount}
+                        className="form-control form-control-lg my-1"
+                        placeholder="Please input amount of Token"
+                        onChange={(e) => setTransferAmount(parseInt(e.target.value))}
+                      />
+                      <button
+                        disabled={!isTranserInputValid()}
+                        className="btn btn-warning btn-lg my-1 w-100"
+                        onClick={() => transfer()}
+                      >
+                        <strong>Send</strong>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div className="col-6">
+                  <div className="card px-0 mx-0">
+                    <div className="card-body">
+                      <h3 className="card-title">Donate to developer</h3>
+                      <span style={{ fontSize: 16 }} className="text-muted">Thank you for your support</span> <br />
+                      <input
+                        style={{ marginTop: 29 }}
+                        type="number"
+                        value={isNaN(donateToken) || donateToken == 0 ? '' : donateToken}
+                        className="form-control form-control-lg mb-1"
+                        placeholder="Please input amount of Token"
+                        onChange={(e) => setDonateToken(parseInt(e.target.value))}
+                      />
+                      <button
+                        disabled={!isDonateInputValid()}
+                        className="btn btn-primary btn-lg my-1 w-100"
+                        onClick={() => donate()}
+                      >
+                        <strong>Send</strong>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="col-6">
-              <div className="card px-0 mx-0">
-                <div className="card-body">
-                  <h3 className="card-title">Donate to developer</h3>
-                  <span style={{ fontSize: 16 }} className="text-muted">Thank you for your support</span> <br />
-                  <input
-                    style={{ marginTop: 29 }}
-                    type="number"
-                    value={isNaN(donateToken) || donateToken == 0 ? '' : donateToken}
-                    className="form-control form-control-lg mb-1"
-                    placeholder="Please input amount of Token"
-                    onChange={(e) => setDonateToken(parseInt(e.target.value))}
-                  />
-                  <button
-                    disabled={!isDonateInputValid()}
-                    className="btn btn-primary btn-lg my-1 w-100"
-                    onClick={() => donate()}
-                  >
-                    <strong>Send</strong>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+            )
+          }
         </div>
       </main>
       <Script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossOrigin="anonymous" />
