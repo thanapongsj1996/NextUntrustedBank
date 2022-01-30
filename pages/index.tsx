@@ -12,7 +12,13 @@ import {
   withdraw,
   login,
   getUserBalanceInBank,
-  transferToken
+  transferToken,
+  addTransaction,
+  getTransactions,
+  selectedAccount,
+  bankAddr,
+  devAddr,
+  Transaction
 } from '../utils/web3client'
 
 const Home: NextPage = () => {
@@ -24,6 +30,7 @@ const Home: NextPage = () => {
   const [transferAddr, setTransferAddr] = useState('')
   const [transferAmount, setTransferAmount] = useState(0)
   const [donateToken, setDonateToken] = useState(0)
+  const [transactions, setTransactions] = useState([] as Transaction[])
 
   useEffect(() => {
     init()
@@ -33,6 +40,7 @@ const Home: NextPage = () => {
             if (loggedIn) {
               checkToken()
               checkUserBankBalance()
+              getUserTranstions()
             }
           })
       })
@@ -53,10 +61,27 @@ const Home: NextPage = () => {
 
     mintToken(`${amount}`)
       .then(tx => {
-        checkToken()
+        // await addTransaction({
+        //   from: selectedAccount.toLowerCase(),
+        //   to: "-",
+        //   amount: amount,
+        //   type: "mint"
+        // })
+        // checkToken()
       })
       .catch(err => console.log(err))
       .finally(() => setIsLoading(false))
+  }
+
+  const getUserTranstions = async () => {
+    setIsLoading(true)
+    const response = await getTransactions()
+
+    if (response.status == 200) {
+      setTransactions(response.data)
+    }
+
+    setIsLoading(false)
   }
 
   const checkToken = () => {
@@ -96,9 +121,15 @@ const Home: NextPage = () => {
     await userApproveBank(amount)
     setIsLoading(true)
     deposit(`${amount}`)
-      .then(tx => {
-        checkToken()
-        checkUserBankBalance()
+      .then(async tx => {
+        await addTransaction({
+          from: selectedAccount.toLowerCase(),
+          to: bankAddr.toLowerCase(),
+          amount: amount,
+          type: "deposit"
+        })
+        await checkToken()
+        await checkUserBankBalance()
       })
       .catch(err => console.log(err))
       .finally(() => setIsLoading(false))
@@ -107,9 +138,15 @@ const Home: NextPage = () => {
   const withdrawToken = async (amount: number) => {
     setIsLoading(true)
     withdraw(`${amount}`)
-      .then(() => {
-        checkToken()
-        checkUserBankBalance()
+      .then(async () => {
+        await addTransaction({
+          from: bankAddr.toLowerCase(),
+          to: selectedAccount.toLowerCase(),
+          amount: amount,
+          type: "withdraw"
+        })
+        await checkToken()
+        await checkUserBankBalance()
       })
       .catch(err => console.log(err))
       .finally(() => setIsLoading(false))
@@ -118,8 +155,14 @@ const Home: NextPage = () => {
   const transfer = async () => {
     setIsLoading(true)
     transferToken(transferAmount.toString(), transferAddr)
-      .then(() => {
-        checkToken()
+      .then(async () => {
+        await addTransaction({
+          from: selectedAccount.toLowerCase(),
+          to: transferAddr.toLowerCase(),
+          amount: transferAmount,
+          type: "transfer"
+        })
+        await checkToken()
       })
       .catch(err => console.log(err))
       .finally(() => {
@@ -132,7 +175,13 @@ const Home: NextPage = () => {
   const donate = async () => {
     setIsLoading(true)
     transferToken(donateToken.toString())
-      .then(() => {
+      .then(async () => {
+        // await addTransaction({
+        //   from: selectedAccount.toLowerCase(),
+        //   to: devAddr.toLowerCase(),
+        //   amount: donateToken,
+        //   type: "donate"
+        // })
         checkToken()
       })
       .catch(err => console.log(err))
@@ -161,6 +210,41 @@ const Home: NextPage = () => {
 
   const isDonateInputValid = () => {
     return !isNaN(donateToken) && donateToken !== 0
+  }
+
+  const formattedDateTime = (date: string) => {
+    const d = new Date(date).toLocaleDateString('th-TH', { timeZone: 'Asia/Bangkok', day: 'numeric', month: '2-digit', year: '2-digit' })
+    const t = new Date(date).toLocaleTimeString('th-TH', { timeZone: 'Asia/Bangkok', hour: '2-digit', minute: '2-digit' })
+    return t + ' ' + d
+  }
+
+  const nameTransactionFromAndTo = (from: string, type: string): string => {
+    let result: string
+    switch (from) {
+      case selectedAccount.toLowerCase():
+        result = "me"
+        break
+      case bankAddr.toLowerCase():
+        result = "bank"
+        break
+      case devAddr.toLowerCase(): {
+        if (type == 'donate') result = "developer"
+        else result = from.slice(0, 10) + '...' + from.slice(-8)
+        break
+      }
+      default: result = from.slice(0, 10) + '...' + from.slice(-8)
+    }
+    return result
+  }
+
+  const trClass = (type: string) => {
+    switch (type) {
+      case 'deposit': return 'table-primary'
+      case 'withdraw': return 'table-warning'
+      case 'transfer': return 'table-light'
+      case 'donate': return 'table-success'
+      default: return 'table-success'
+    }
   }
 
   return (
@@ -293,7 +377,7 @@ const Home: NextPage = () => {
           {
             isLogin && (
               <div className="row" style={{ marginTop: 60 }}>
-                <div className="col-6">
+                <div className="col-md-6">
                   <div className="card px-0 mx-0">
                     <div className="card-body">
                       <h3 className="card-title">Transfer to...</h3>
@@ -320,7 +404,7 @@ const Home: NextPage = () => {
                     </div>
                   </div>
                 </div>
-                <div className="col-6">
+                <div className="col-md-6 mt-3 mt-md-0">
                   <div className="card px-0 mx-0">
                     <div className="card-body">
                       <h3 className="card-title">Donate to developer</h3>
@@ -346,6 +430,35 @@ const Home: NextPage = () => {
               </div>
             )
           }
+          {isLogin && (
+            <>
+              <h2 className="mt-4">History</h2>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">From</th>
+                    <th scope="col">To</th>
+                    <th scope="col">Type</th>
+                    <th scope="col">Amout</th>
+                    <th scope="col">When</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transactions.length > 0 && transactions.map((t, i) =>
+                    <tr key={i} className={trClass(t.type)}>
+                      <th scope="row">{i + 1}</th>
+                      <td>{nameTransactionFromAndTo(t.from, t.type)}</td>
+                      <td>{nameTransactionFromAndTo(t.to, t.type)}</td>
+                      <td>{t.type}</td>
+                      <td>{t.amount}</td>
+                      <td>{formattedDateTime(t.createdAt)}</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </>
+          )}
         </div>
       </main>
       <Script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossOrigin="anonymous" />

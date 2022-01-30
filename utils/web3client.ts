@@ -1,4 +1,5 @@
 import Web3 from 'web3'
+import axios from 'axios'
 import { AbiItem } from 'web3-utils'
 import TokenContract from '../build-contract/contracts/Token.json'
 import { Token } from '../types/web3-v1-contracts/Token'
@@ -11,8 +12,9 @@ let tokenContract: Token
 let bankContract: Bank
 let isInitialized: boolean = false
 const tokenAddr = process.env.NEXT_PUBLIC_TOKEN_ADDR
-const bankAddr = process.env.NEXT_PUBLIC_BANK_ADDR
-const devAddr = process.env.NEXT_PUBLIC_DEV_ADDR
+export const bankAddr = process.env.NEXT_PUBLIC_BANK_ADDR
+export const devAddr = process.env.NEXT_PUBLIC_DEV_ADDR
+const baseEndpoint = process.env.NEXT_PUBLIC_API_ENDPOINT
 
 export const login = async () => {
     let provider = (window as any).ethereum
@@ -122,4 +124,18 @@ export const transferToken = async (amount: string, account?: string | null) => 
     const amountWei = toWei(amount)
     const receiverArr = account ? account : devAddr
     return tokenContract.methods.transfer(receiverArr, amountWei).send({ from: selectedAccount })
+}
+
+export type Transaction = {
+    from: string,
+    to: string,
+    amount: number,
+    type: string,
+    createdAt?: string
+}
+export const addTransaction = async (payload: Transaction) => {
+    await axios.post(`${baseEndpoint}/transactions`, payload)
+}
+export const getTransactions = async () => {
+    return axios.get(`${baseEndpoint}/transactions/${selectedAccount.toLowerCase()}`)
 }
