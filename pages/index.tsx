@@ -68,6 +68,7 @@ const Home: NextPage = () => {
           type: "mint"
         })
         await checkToken()
+        await getUserTranstions()
       })
       .catch(err => console.log(err))
       .finally(() => setIsLoading(false))
@@ -130,6 +131,7 @@ const Home: NextPage = () => {
         })
         await checkToken()
         await checkUserBankBalance()
+        await getUserTranstions()
       })
       .catch(err => console.log(err))
       .finally(() => setIsLoading(false))
@@ -147,6 +149,7 @@ const Home: NextPage = () => {
         })
         await checkToken()
         await checkUserBankBalance()
+        await getUserTranstions()
       })
       .catch(err => console.log(err))
       .finally(() => setIsLoading(false))
@@ -163,6 +166,7 @@ const Home: NextPage = () => {
           type: "transfer"
         })
         await checkToken()
+        await getUserTranstions()
       })
       .catch(err => console.log(err))
       .finally(() => {
@@ -183,6 +187,7 @@ const Home: NextPage = () => {
           type: "donate"
         })
         await checkToken()
+        await getUserTranstions()
       })
       .catch(err => console.log(err))
       .finally(() => {
@@ -239,6 +244,7 @@ const Home: NextPage = () => {
 
   const trClass = (type: string) => {
     switch (type) {
+      case 'mint': return 'table-info'
       case 'deposit': return 'table-primary'
       case 'withdraw': return 'table-warning'
       case 'transfer': return 'table-light'
