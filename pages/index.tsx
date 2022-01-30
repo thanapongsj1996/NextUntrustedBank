@@ -226,7 +226,7 @@ const Home: NextPage = () => {
   const nameTransactionFromAndTo = (from: string, type: string): string => {
     let result: string
     switch (from) {
-      case selectedAccount.toLowerCase():
+      case selectedAccount?.toLowerCase():
         result = "me"
         break
       case bankAddr.toLowerCase():
