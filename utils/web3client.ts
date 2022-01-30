@@ -72,7 +72,7 @@ export const init = async () => {
     }
 
     const web3 = await new Web3(provider)
-    web3.eth.getAccounts(async (err, acc) => {
+    await web3.eth.getAccounts(async (err, acc) => {
         if (!err && acc.length == 0) await window.localStorage.removeItem('selectedAccount')
     })
     tokenContract = await new web3.eth.Contract(TokenContract.abi as AbiItem[], tokenAddr) as any as Token
