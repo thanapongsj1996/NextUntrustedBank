@@ -237,7 +237,10 @@ const Home: NextPage = () => {
         else result = from.slice(0, 10) + '...' + from.slice(-8)
         break
       }
-      default: result = from.slice(0, 10) + '...' + from.slice(-8)
+      default: {
+        if (type != 'mint') result = from.slice(0, 10) + '...' + from.slice(-8)
+        else result = from
+      }
     }
     return result
   }
