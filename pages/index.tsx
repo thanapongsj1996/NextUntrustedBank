@@ -60,14 +60,14 @@ const Home: NextPage = () => {
     setIsLoading(true)
 
     mintToken(`${amount}`)
-      .then(tx => {
-        // await addTransaction({
-        //   from: selectedAccount.toLowerCase(),
-        //   to: "-",
-        //   amount: amount,
-        //   type: "mint"
-        // })
-        // checkToken()
+      .then(async tx => {
+        await addTransaction({
+          from: selectedAccount.toLowerCase(),
+          to: "-",
+          amount: amount,
+          type: "mint"
+        })
+        await checkToken()
       })
       .catch(err => console.log(err))
       .finally(() => setIsLoading(false))
@@ -176,13 +176,13 @@ const Home: NextPage = () => {
     setIsLoading(true)
     transferToken(donateToken.toString())
       .then(async () => {
-        // await addTransaction({
-        //   from: selectedAccount.toLowerCase(),
-        //   to: devAddr.toLowerCase(),
-        //   amount: donateToken,
-        //   type: "donate"
-        // })
-        checkToken()
+        await addTransaction({
+          from: selectedAccount.toLowerCase(),
+          to: devAddr.toLowerCase(),
+          amount: donateToken,
+          type: "donate"
+        })
+        await checkToken()
       })
       .catch(err => console.log(err))
       .finally(() => {
