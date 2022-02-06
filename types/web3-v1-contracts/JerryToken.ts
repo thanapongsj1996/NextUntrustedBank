@@ -38,13 +38,13 @@ export type Transfer = ContractEventLog<{
   2: string;
 }>;
 
-export interface Token extends BaseContract {
+export interface JerryToken extends BaseContract {
   constructor(
     jsonInterface: any[],
     address?: string,
     options?: ContractOptions
-  ): Token;
-  clone(): Token;
+  ): JerryToken;
+  clone(): JerryToken;
   methods: {
     /**
      * See {IERC20-allowance}.

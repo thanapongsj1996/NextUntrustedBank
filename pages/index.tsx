@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import { fromWei } from '../utils/common'
 import {
   init,
-  mintToken,
+  mintTomToken,
   checkUserToken,
   deposit,
   approveBank,
@@ -18,19 +18,39 @@ import {
   selectedAccount,
   bankAddr,
   devAddr,
-  Transaction
+  Transaction,
+  mintJerryToken,
+  checkUserJerryToken,
+  addLiquidity,
+  tomApprovePool,
+  jerryApprovePool,
+  getRatio,
+  swapTomForJerry,
+  swapJerryForTom,
+  jerryAmountByTom,
+  tomAmountByJerry,
+  getLPToken
 } from '../utils/web3client'
 
 const Home: NextPage = () => {
   const [balance, setBalance] = useState(0)
+  const [balanceJerry, setBalanceJerry] = useState(0)
   const [balanceInBank, setBalanceInBank] = useState(0)
+  const [priceRatio, setPriceRatio] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [isLogin, setIsLogin] = useState(false)
   const [inputAmount, setInputAmount] = useState(0)
   const [transferAddr, setTransferAddr] = useState('')
   const [transferAmount, setTransferAmount] = useState(0)
   const [donateToken, setDonateToken] = useState(0)
+  const [tomToJerryAmount, setTomToJerryAmount] = useState(0)
+  const [jerryToTomAmount, setJerryToTomAmount] = useState(0)
+  const [quoteJerryByTom, setQuoteJerryByTom] = useState(0)
+  const [quoteTomByJerry, setQuoteTombyJerry] = useState(0)
+  const [lpToken, setLPToken] = useState(0)
   const [transactions, setTransactions] = useState([] as Transaction[])
+
+  const ownerAddr = process.env.NEXT_PUBLIC_OWNER_ADDR
 
   useEffect(() => {
     init()
@@ -41,6 +61,8 @@ const Home: NextPage = () => {
               checkToken()
               checkUserBankBalance()
               getUserTranstions()
+              checkJerryToken()
+              getTokenRatio()
             }
           })
       })
@@ -59,7 +81,7 @@ const Home: NextPage = () => {
   const mint = (amount: number) => {
     setIsLoading(true)
 
-    mintToken(`${amount}`)
+    mintTomToken(`${amount}`)
       .then(async tx => {
         await addTransaction({
           from: selectedAccount.toLowerCase(),
@@ -91,7 +113,7 @@ const Home: NextPage = () => {
     checkUserToken()
       .then(tx => {
         const balance = fromWei(tx)
-        setBalance(parseInt(balance))
+        setBalance(parseFloat(balance))
       })
       .catch(err => console.log(err))
       .finally(() => setIsLoading(false))
@@ -103,7 +125,7 @@ const Home: NextPage = () => {
     getUserBalanceInBank()
       .then((tx) => {
         const balance = fromWei(tx)
-        setBalanceInBank(parseInt(balance))
+        setBalanceInBank(parseFloat(balance))
       })
       .catch(err => console.log(err))
       .finally(() => setIsLoading(false))
@@ -196,6 +218,94 @@ const Home: NextPage = () => {
       })
   }
 
+  const mintJerry = async () => {
+    setIsLoading(true)
+    mintJerryToken('1000')
+      .finally(() => {
+        window.location.reload()
+      })
+  }
+
+  const checkJerryToken = async () => {
+    setIsLoading(true)
+    checkUserJerryToken()
+      .then((tx) => {
+        const balance = fromWei(tx)
+        setBalanceJerry(parseFloat(balance))
+      })
+  }
+
+  const approvePool = async (tom: string, jerry: string) => {
+    setIsLoading(true)
+
+    await tomApprovePool(tom)
+      .then()
+      .catch(err => console.log(err))
+      .finally(() => setIsLoading(false))
+
+    await jerryApprovePool(jerry)
+      .then()
+      .catch(err => console.log(err))
+      .finally(() => setIsLoading(false))
+  }
+
+  const addLiquidityPool = async () => {
+    setIsLoading(true)
+    await approvePool('10000000', '1000000')
+    setIsLoading(true)
+    addLiquidity('10000000', '1000000')
+      .finally(() => {
+        setIsLoading(false)
+        window.location.reload()
+      })
+  }
+
+  const getLP = async () => {
+    getLPToken().then(lp => setLPToken(parseFloat(lp)))
+  }
+
+  const getTokenRatio = async () => {
+    getRatio().then((p) => {
+      setPriceRatio(p)
+    })
+  }
+
+  const swapTokenTomForJerry = async (amount: string) => {
+    setIsLoading(true)
+    swapTomForJerry(amount)
+      .finally(() => window.location.reload())
+  }
+
+  const isTomToJerryInputValid = () => {
+    return !isNaN(tomToJerryAmount) && tomToJerryAmount !== 0 && tomToJerryAmount <= 1000
+  }
+
+  const swapTokenJerryForTom = async (amount: string) => {
+    setIsLoading(true)
+    swapJerryForTom(amount)
+      .finally(() => window.location.reload())
+  }
+
+  const isJerryToTomInputValid = () => {
+    return !isNaN(jerryToTomAmount) && jerryToTomAmount !== 0 && jerryToTomAmount <= 1000
+  }
+
+  const getQuoteJerryByTom = async (amount: string) => {
+    const amountFloat = parseFloat(amount)
+    if (amountFloat > 0 && amountFloat <= 1000) {
+      jerryAmountByTom(amount)
+        .then(q => setQuoteJerryByTom(q))
+    }
+  }
+
+  const getQuoteTomByJerry = async (amount: string) => {
+    const amountFloat = parseFloat(amount)
+    if (amountFloat > 0 && amountFloat <= 1000) {
+      tomAmountByJerry(amount)
+        .then(q => setQuoteTombyJerry(q))
+    }
+  }
+
   const onLogin = async () => {
     await login()
   }
@@ -264,7 +374,7 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossOrigin="anonymous"></link>
       </Head>
-      <nav className="navbar navbar-light bg-dark">
+      <nav className="navbar navbar-light bg-dark fixed-top">
         <div className="container">
           <a className="navbar-brand text-light">
             <svg
@@ -276,19 +386,15 @@ const Home: NextPage = () => {
             </svg>
             <span className="mx-2">Untrusted Bank</span></a>
           <div>
-            {
-              isLogin &&
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="30"
-                height="30"
-                fill="currentColor" className="bi bi-coin text-white" viewBox="0 0 16 16">
-                <path d="M5.5 9.511c.076.954.83 1.697 2.182 1.785V12h.6v-.709c1.4-.098 2.218-.846 2.218-1.932 0-.987-.626-1.496-1.745-1.76l-.473-.112V5.57c.6.068.982.396 1.074.85h1.052c-.076-.919-.864-1.638-2.126-1.716V4h-.6v.719c-1.195.117-2.01.836-2.01 1.853 0 .9.606 1.472 1.613 1.707l.397.098v2.034c-.615-.093-1.022-.43-1.114-.9H5.5zm2.177-2.166c-.59-.137-.91-.416-.91-.836 0-.47.345-.822.915-.925v1.76h-.005zm.692 1.193c.717.166 1.048.435 1.048.91 0 .542-.412.914-1.135.982V8.518l.087.02z" />
-                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
-                <path d="M8 13.5a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11zm0 .5A6 6 0 1 0 8 2a6 6 0 0 0 0 12z" />
-              </svg>
+            {isLogin &&
+              <>
+                <img src="tom.png" style={{ marginTop: -10 }} alt="" width="43" height="35" />
+                <span className="text-white ms-1 me-3" style={{ fontSize: 18 }}>{balance.toFixed(2)}</span>
+                <img src="jerry.png" style={{ marginTop: 0 }} alt="" width="45" height="35" />
+                <span className="text-white " style={{ fontSize: 18 }}>{balanceJerry.toFixed(2)}</span>
+              </>
             }
-            {isLogin && <span className="text-white mx-2" style={{ fontSize: 18 }}>{balance}</span>}
+
             {!isLogin && <button className="btn btn-success" onClick={() => onLogin()}>Connect with MetaMask</button>}
           </div>
         </div>
@@ -296,19 +402,15 @@ const Home: NextPage = () => {
       <main>
         {isLoading && <div className="loading">Loading&#8230;</div>}
         <div className="p-5 mb-4 bg-light rounded-3">
-          <div className="container py-2">
-            <h1 className="display-5 fw-bold" style={{}}>Welcome</h1>
+          <div className="container pt-5">
+            <h1 className="display-5 fw-bold">Welcome</h1>
             <p className="col-md-8 fs-4">
               This is the most untrusted bank, nice to meet you <br />
               {
                 isLogin &&
                 <>
-                  <span style={{ fontSize: 16 }} className="text-muted">Current balance in bank</span> <br />
-                  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" style={{ marginTop: -35, marginRight: 10 }} className="bi bi-coin" viewBox="0 0 16 16">
-                    <path d="M5.5 9.511c.076.954.83 1.697 2.182 1.785V12h.6v-.709c1.4-.098 2.218-.846 2.218-1.932 0-.987-.626-1.496-1.745-1.76l-.473-.112V5.57c.6.068.982.396 1.074.85h1.052c-.076-.919-.864-1.638-2.126-1.716V4h-.6v.719c-1.195.117-2.01.836-2.01 1.853 0 .9.606 1.472 1.613 1.707l.397.098v2.034c-.615-.093-1.022-.43-1.114-.9H5.5zm2.177-2.166c-.59-.137-.91-.416-.91-.836 0-.47.345-.822.915-.925v1.76h-.005zm.692 1.193c.717.166 1.048.435 1.048.91 0 .542-.412.914-1.135.982V8.518l.087.02z" />
-                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
-                    <path d="M8 13.5a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11zm0 .5A6 6 0 1 0 8 2a6 6 0 0 0 0 12z" />
-                  </svg>
+                  <span style={{ fontSize: 16 }} className="text-muted">Current balance in bank (only TomToken accepted)</span> <br />
+                  <img src="tom.png" style={{ marginTop: -35 }} className="me-2" alt="" width="50" height="50" />
                   <strong style={{ fontSize: 70 }}>{balanceInBank}</strong>
                 </>
               }
@@ -330,7 +432,13 @@ const Home: NextPage = () => {
               <div className="row">
                 <div className="col-12">
                   <div className="mb-3">
-                    <input type="number" value={isNaN(inputAmount) || inputAmount == 0 ? '' : inputAmount} className="form-control form-control-lg" placeholder="Please input amount of Token" onChange={(e) => setInputAmount(parseInt(e.target.value))} />
+                    <input
+                      type="number"
+                      value={isNaN(inputAmount) || inputAmount == 0 ? '' : inputAmount}
+                      className="form-control form-control-lg"
+                      placeholder="Please input amount of TomToken"
+                      onChange={(e) => setInputAmount(parseFloat(e.target.value))}
+                    />
                   </div>
                 </div>
                 <div className="col-12 col-md-4 my-2">
@@ -346,7 +454,7 @@ const Home: NextPage = () => {
                         style={{ marginTop: -5, marginRight: 10 }} fill="currentColor" className="bi bi-gem" viewBox="0 0 16 16">
                         <path d="M3.1.7a.5.5 0 0 1 .4-.2h9a.5.5 0 0 1 .4.2l2.976 3.974c.149.185.156.45.01.644L8.4 15.3a.5.5 0 0 1-.8 0L.1 5.3a.5.5 0 0 1 0-.6l3-4zm11.386 3.785-1.806-2.41-.776 2.413 2.582-.003zm-3.633.004.961-2.989H4.186l.963 2.995 5.704-.006zM5.47 5.495 8 13.366l2.532-7.876-5.062.005zm-1.371-.999-.78-2.422-1.818 2.425 2.598-.003zM1.499 5.5l5.113 6.817-2.192-6.82L1.5 5.5zm7.889 6.817 5.123-6.83-2.928.002-2.195 6.828z" />
                       </svg>
-                      Mint Token
+                      Mint Tom
                     </strong>
                   </button>
                 </div>
@@ -401,7 +509,7 @@ const Home: NextPage = () => {
                         value={isNaN(transferAmount) || transferAmount == 0 ? '' : transferAmount}
                         className="form-control form-control-lg my-1"
                         placeholder="Please input amount of Token"
-                        onChange={(e) => setTransferAmount(parseInt(e.target.value))}
+                        onChange={(e) => setTransferAmount(parseFloat(e.target.value))}
                       />
                       <button
                         disabled={!isTranserInputValid()}
@@ -424,7 +532,7 @@ const Home: NextPage = () => {
                         value={isNaN(donateToken) || donateToken == 0 ? '' : donateToken}
                         className="form-control form-control-lg mb-1"
                         placeholder="Please input amount of Token"
-                        onChange={(e) => setDonateToken(parseInt(e.target.value))}
+                        onChange={(e) => setDonateToken(parseFloat(e.target.value))}
                       />
                       <button
                         disabled={!isDonateInputValid()}
@@ -469,6 +577,108 @@ const Home: NextPage = () => {
             </>
           )}
         </div>
+
+        {
+          isLogin &&
+          <>
+            <div className="p-5 mb-4 bg-light rounded-3">
+              <div className="container py-2">
+                <h1 className="display-5 fw-bold">
+                  Untrusted Swap
+                  <img src="jerry.png" className="ms-2" style={{ marginTop: 2 }} alt="" width="60" height="45" />
+                  <img src="transfer.png" className="mx-2" style={{ marginTop: 2 }} alt="" width="30" height="30" />
+                  <img src="tom.png" style={{ marginTop: -3 }} alt="" width="50" height="45" />
+                </h1>
+                <p className="col-md-8 fs-4">
+                  Swap your token in Tom/Jerry pool <br />
+
+                  <>
+                    <span style={{ fontSize: 16 }} className="text-muted">Current Jerry price for 1 Tom</span> <br />
+                    <strong style={{ fontSize: 70 }}>{priceRatio.toFixed(5)}</strong>
+                    <span className="text-muted ms-2">Jerry / Tom</span>
+                  </>
+                </p>
+              </div>
+            </div>
+
+            <div className="container mb-5">
+              {selectedAccount && ownerAddr && selectedAccount.toLowerCase() == ownerAddr.toLowerCase() &&
+                <>
+                  <p>lp : {lpToken}</p>
+                  <div className="d-flex justify-content-start">
+                    <button className="btn btn-warning mx-1" onClick={() => mintJerry()}>Mint Jerry</button>
+                    <button className="btn btn-warning mx-1" onClick={() => addLiquidityPool()}>Add Liquidity</button>
+                    <button className="btn btn-warning mx-1" onClick={() => getLP()}>Get LP Token</button>
+                  </div>
+                </>
+              }
+              <div className="row" style={{ marginTop: 60 }}>
+                <div className="col-md-6 mt-3 mt-md-0">
+                  <div className="card px-0 mx-0">
+                    <div className="card-body">
+                      <h3 className="card-title">Tom to Jerry</h3>
+                      <span style={{ fontSize: 16 }} className="text-muted">Max 1000 token per swap</span> <br />
+                      <input
+                        type="number"
+                        value={isNaN(tomToJerryAmount) || tomToJerryAmount == 0 ? '' : tomToJerryAmount}
+                        className="form-control form-control-lg my-1"
+                        placeholder="Please input amount of TomToken"
+                        onChange={(e) => {
+                          setTomToJerryAmount(parseFloat(e.target.value))
+                          getQuoteJerryByTom(`${parseFloat(e.target.value)}`)
+                        }}
+                      />
+                      <span
+                        style={{ fontSize: 16 }}
+                        className="text-muted"
+                      >
+                        {isTomToJerryInputValid() ? `~ ${quoteJerryByTom.toFixed(6)}` : '0'} Jerry
+                      </span> <br />
+                      <button
+                        disabled={!isTomToJerryInputValid()}
+                        className="btn btn-primary btn-lg my-1 w-100"
+                        onClick={() => swapTokenTomForJerry(`${tomToJerryAmount}`)}
+                      >
+                        <strong>Swap</strong>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div className="col-md-6 mt-3 mt-md-0">
+                  <div className="card px-0 mx-0">
+                    <div className="card-body">
+                      <h3 className="card-title">Jerry to Tom</h3>
+                      <span style={{ fontSize: 16 }} className="text-muted">Max 1000 token per swap</span> <br />
+                      <input
+                        type="number"
+                        value={isNaN(jerryToTomAmount) || jerryToTomAmount == 0 ? '' : jerryToTomAmount}
+                        className="form-control form-control-lg my-1"
+                        placeholder="Please input amount of JerryToken"
+                        onChange={(e) => {
+                          setJerryToTomAmount(parseFloat(e.target.value))
+                          getQuoteTomByJerry(`${parseFloat(e.target.value)}`)
+                        }}
+                      />
+                      <span
+                        style={{ fontSize: 16 }}
+                        className="text-muted"
+                      >
+                        {isJerryToTomInputValid() ? `~ ${quoteTomByJerry.toFixed(6)}` : '0'} Tom
+                      </span> <br />
+                      <button
+                        disabled={!isJerryToTomInputValid()}
+                        className="btn btn-primary btn-lg my-1 w-100"
+                        onClick={() => swapTokenJerryForTom(`${jerryToTomAmount}`)}
+                      >
+                        <strong>Swap</strong>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        }
       </main>
       <Script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossOrigin="anonymous" />
     </div>
