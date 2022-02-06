@@ -11,6 +11,6 @@ Developed by using:
 Deploying on <b>Bsc testnet</b>
 
 
-![](cover1.png)
-![](cover2.png)
-![](cover3.png)
+![](img1.png)
+![](img2.png)
+![](img3.png)
